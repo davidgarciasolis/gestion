@@ -1,0 +1,12 @@
+body { font-family: Arial, sans-serif; background: #f4f4f4; margin: 0; padding: 0; }
+#error, .error { color: red; margin-top: 10px; }
+#app { max-width: 900px; margin: 30px auto; background: #fff; padding: 20px; border-radius: 8px; }
+input, button, select { margin: 5px 0; padding: 8px; }
+button { cursor: pointer; }
+table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+table, th, td { border: 1px solid #ccc; }
+th, td { padding: 8px; text-align: left; }
+tr:nth-child(even) { background: #f9f9f9; }
+#login-section, #main-section { margin-bottom: 20px; }
+#client-form-section, #order-form-section { background: #f0f0f0; padding: 10px; border-radius: 6px; margin-top: 10px; }
+.lineas-table { margin-top: 10px; }

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Directus CRM</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="login-section">
+      <h2>Iniciar sesión</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Contraseña">
+      <button id="login-btn">Entrar</button>
+      <div id="login-error" class="error"></div>
+    </div>
+    <div id="main-section" style="display:none;">
+      <button id="logout-btn">Cerrar sesión</button>
+      <h2>Clientes</h2>
+      <button id="add-client-btn">Nuevo Cliente</button>
+      <div id="clients-list"></div>
+      <div id="client-form-section" style="display:none;"></div>
+      <h2>Pedidos</h2>
+      <button id="add-order-btn">Nuevo Pedido</button>
+      <div id="orders-list"></div>
+      <div id="order-form-section" style="display:none;"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
