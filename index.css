@@ -307,6 +307,11 @@ textarea.form-control {
     margin-bottom: 1rem;
 }
 
+.sub-table th, .sub-table td {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+}
+
 /* Login Styles */
 .login-container {
     display: flex;

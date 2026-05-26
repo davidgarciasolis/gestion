@@ -220,27 +220,19 @@ function openFormModal(id = null, record = null) {
             </form>
         `;
     } else if (currentView === 'pedidos') {
-        modalTitle.textContent = id ? 'Editar Pedido' : 'Nuevo Pedido';
-        let lineasHtml = '';
-        if (id) {
-            lineasHtml = `<div class="sub-table-container" id="lineas-container"><p>Cargando líneas...</p></div>`;
-            currentPedidoId = id;
-            loadLineasPedido(id);
-        }
-        
+        modalTitle.textContent = 'Nuevo Pedido';
         modalBody.innerHTML = `
             <form id="record-form">
-                <div class="form-group"><label>Referencia</label><input type="text" class="form-control" name="referencia" value="${record?.referencia || ''}" required></div>
-                <div class="form-group"><label>Cliente ID</label><input type="number" class="form-control" name="cliente_id" value="${record?.cliente_id || ''}" required></div>
-                <div class="form-group"><label>Fecha Pedido</label><input type="date" class="form-control" name="fecha_pedido" value="${record?.fecha_pedido || ''}"></div>
-                <div class="form-group"><label>Modelo</label><input type="text" class="form-control" name="modelo" value="${record?.modelo || ''}"></div>
-                <div class="form-group"><label>Acabados</label><input type="text" class="form-control" name="acabados" value="${record?.acabados || ''}"></div>
-                <div class="form-group"><label>Estado</label><input type="text" class="form-control" name="estado" value="${record?.estado || ''}"></div>
-                <div class="form-group"><label>Total</label><input type="number" step="0.01" class="form-control" name="total" value="${record?.total || ''}"></div>
-                <div class="form-group"><label>Observaciones</label><textarea class="form-control" name="observaciones">${record?.observaciones || ''}</textarea></div>
-                <button type="submit" class="btn-primary">Guardar Pedido</button>
+                <div class="form-group"><label>Referencia</label><input type="text" class="form-control" name="referencia" value="" required></div>
+                <div class="form-group"><label>Cliente ID</label><input type="number" class="form-control" name="cliente_id" value="" required></div>
+                <div class="form-group"><label>Fecha Pedido</label><input type="date" class="form-control" name="fecha_pedido" value=""></div>
+                <div class="form-group"><label>Modelo</label><input type="text" class="form-control" name="modelo" value=""></div>
+                <div class="form-group"><label>Acabados</label><input type="text" class="form-control" name="acabados" value=""></div>
+                <div class="form-group"><label>Estado</label><input type="text" class="form-control" name="estado" value=""></div>
+                <div class="form-group"><label>Total</label><input type="number" step="0.01" class="form-control" name="total" value=""></div>
+                <div class="form-group"><label>Observaciones</label><textarea class="form-control" name="observaciones"></textarea></div>
+                <button type="submit" class="btn-primary">Crear Pedido</button>
             </form>
-            ${lineasHtml}
         `;
     }
     
@@ -289,11 +281,132 @@ async function editCliente(id) {
 }
 
 async function editPedido(id) {
+    appContent.innerHTML = '<p>Cargando detalle del pedido...</p>';
+    viewTitle.textContent = `Pedido #${id}`;
+    btnCreate.style.display = 'none'; // Hide create button on detail view
+    
     try {
-        const res = await fetchAPI(`${API_URL}/items/pedidos/${id}`);
-        const data = await res.json();
-        openFormModal(id, data.data);
-    } catch (err) { alert('Error al cargar datos'); }
+        // Fetch pedido
+        const resP = await fetchAPI(`${API_URL}/items/pedidos/${id}`);
+        const dataP = await resP.json();
+        const pedido = dataP.data;
+
+        // Fetch lineas
+        const resL = await fetchAPI(`${API_URL}/items/lineas_pedido?filter[pedido_id][_eq]=${id}`);
+        const dataL = await resL.json();
+        const lineas = dataL.data || [];
+
+        // Build HTML
+        let html = `
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 2rem;">
+                <h3>Información del Pedido</h3>
+                <button class="btn-primary btn-sm" onclick="btnCreate.style.display='block'; loadView()">Volver a Pedidos</button>
+            </div>
+            
+            <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem; max-width: 100%; transform: none;">
+                <form id="detail-record-form" style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <div class="form-group"><label>Referencia</label><input type="text" class="form-control" name="referencia" value="${pedido?.referencia || ''}" required></div>
+                    <div class="form-group"><label>Cliente ID</label><input type="number" class="form-control" name="cliente_id" value="${pedido?.cliente_id || ''}" required></div>
+                    <div class="form-group"><label>Fecha Pedido</label><input type="date" class="form-control" name="fecha_pedido" value="${pedido?.fecha_pedido || ''}"></div>
+                    <div class="form-group"><label>Modelo</label><input type="text" class="form-control" name="modelo" value="${pedido?.modelo || ''}"></div>
+                    <div class="form-group"><label>Acabados</label><input type="text" class="form-control" name="acabados" value="${pedido?.acabados || ''}"></div>
+                    <div class="form-group"><label>Estado</label><input type="text" class="form-control" name="estado" value="${pedido?.estado || ''}"></div>
+                    <div class="form-group"><label>Total</label><input type="number" step="0.01" class="form-control" name="total" value="${pedido?.total || ''}"></div>
+                    <div class="form-group" style="grid-column: span 2;"><label>Observaciones</label><textarea class="form-control" name="observaciones">${pedido?.observaciones || ''}</textarea></div>
+                    <div style="grid-column: span 2;">
+                        <button type="submit" class="btn-primary">Guardar Cambios del Pedido</button>
+                    </div>
+                </form>
+
+                <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2.5rem 0;">
+
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 1.5rem;">
+                    <h3 style="margin: 0; font-size: 1.25rem;">Líneas de Pedido</h3>
+                    <button type="button" class="btn-primary btn-sm" onclick="document.getElementById('form-linea-container').style.display='block'">+ Añadir Línea</button>
+                </div>
+                
+                <div class="table-container" style="margin-bottom: 2rem; background: rgba(15, 23, 42, 0.3);">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Artículo</th>
+                                <th>Cant.</th>
+                                <th>Ref.</th>
+                                <th>Acabado</th>
+                                <th>Precio</th>
+                                <th>Obs.</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        if (lineas.length === 0) {
+            html += `<tr><td colspan="7" style="text-align: center; color: var(--text-muted);">No hay líneas registradas para este pedido.</td></tr>`;
+        } else {
+            lineas.forEach(l => {
+                html += `
+                    <tr>
+                        <td>${l.articulo || ''}</td>
+                        <td>${l.cantidad}</td>
+                        <td>${l.referencia_producto || ''}</td>
+                        <td>${l.acabado || ''}</td>
+                        <td>${l.precio || '0.00'}</td>
+                        <td>${l.observaciones || ''}</td>
+                        <td class="actions-cell">
+                            <button type="button" class="btn-danger btn-sm" onclick="deleteLinea(${l.id}, ${id})">X</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += `
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="form-linea-container" class="glass-panel" style="display:none; padding: 2rem; max-width: 100%; transform: none; background: rgba(15, 23, 42, 0.4); border: 1px dashed var(--border-color); box-shadow: none;">
+                    <h4 style="margin-bottom: 1rem;">Nueva Línea</h4>
+                    <div style="display:flex; gap:1rem; margin-top:1rem; flex-wrap:wrap; align-items:center;">
+                        <div class="form-group" style="margin-bottom:0;"><input type="number" id="nl_cant" class="form-control" placeholder="Cant." style="width:80px"></div>
+                        <div class="form-group" style="margin-bottom:0; flex:1; min-width:180px;"><input type="text" id="nl_art" class="form-control" placeholder="Artículo"></div>
+                        <div class="form-group" style="margin-bottom:0;"><input type="text" id="nl_ref" class="form-control" placeholder="Referencia" style="width:120px"></div>
+                        <div class="form-group" style="margin-bottom:0;"><input type="text" id="nl_acabado" class="form-control" placeholder="Acabado" style="width:120px"></div>
+                        <div class="form-group" style="margin-bottom:0;"><input type="number" id="nl_precio" class="form-control" placeholder="Precio" style="width:100px" step="0.01"></div>
+                        <div class="form-group" style="margin-bottom:0; flex:1; min-width:180px;"><input type="text" id="nl_obs" class="form-control" placeholder="Observaciones"></div>
+                        <button type="button" class="btn-primary" onclick="saveLinea(${id})">Guardar Línea</button>
+                        <button type="button" class="btn-danger" onclick="document.getElementById('form-linea-container').style.display='none'">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        appContent.innerHTML = html;
+
+        document.getElementById('detail-record-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const updateData = Object.fromEntries(formData.entries());
+            if(updateData.cliente_id) updateData.cliente_id = parseInt(updateData.cliente_id);
+            if(updateData.total) updateData.total = parseFloat(updateData.total);
+            
+            try {
+                const r = await fetchAPI(`${API_URL}/items/pedidos/${id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(updateData)
+                });
+                if(!r.ok) throw new Error('Error al actualizar pedido');
+                alert('Pedido actualizado');
+            } catch(err) {
+                alert(err.message);
+            }
+        });
+
+    } catch (error) {
+        appContent.innerHTML = `<p style="color:var(--danger)">Error: ${error.message}</p>`;
+    }
 }
 
 async function deleteRecord(collection, id) {
@@ -306,78 +419,15 @@ async function deleteRecord(collection, id) {
     }
 }
 
-// LÍNEAS DE PEDIDO
-async function loadLineasPedido(pedidoId) {
-    const container = document.getElementById('lineas-container');
-    if(!container) return;
-    
-    try {
-        // Filtrar lineas_pedido por pedido_id (sintaxis Directus: filter[field][_eq]=value)
-        const res = await fetchAPI(`${API_URL}/items/lineas_pedido?filter[pedido_id][_eq]=${pedidoId}`);
-        const data = await res.json();
-        const lineas = data.data || [];
-        
-        let html = `
-            <div class="sub-table-header">
-                <h4>Líneas de Pedido</h4>
-                <button type="button" class="btn-primary btn-sm" onclick="openLineaForm()">+ Línea</button>
-            </div>
-            <table style="font-size:0.8rem">
-                <thead>
-                    <tr><th>Artículo</th><th>Cant.</th><th>Ref.</th><th>Precio</th><th>Acciones</th></tr>
-                </thead>
-                <tbody>
-        `;
-        
-        if(lineas.length === 0) {
-            html += `<tr><td colspan="5">No hay líneas.</td></tr>`;
-        } else {
-            lineas.forEach(l => {
-                html += `
-                    <tr>
-                        <td>${l.articulo || ''}</td>
-                        <td>${l.cantidad}</td>
-                        <td>${l.referencia_producto || ''}</td>
-                        <td>${l.precio || '0.00'}</td>
-                        <td>
-                            <button type="button" class="btn-danger btn-sm" onclick="deleteLinea(${l.id})">X</button>
-                        </td>
-                    </tr>
-                `;
-            });
-        }
-        html += `</tbody></table>`;
-        container.innerHTML = html;
-        
-        // Add form area for new linea
-        container.innerHTML += `
-            <div id="form-linea-container" style="display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border-color);">
-                <h5>Nueva Línea</h5>
-                <div style="display:flex; gap:0.5rem; margin-top:0.5rem; flex-wrap:wrap;">
-                    <input type="number" id="nl_cant" class="form-control" placeholder="Cant." style="width:80px">
-                    <input type="text" id="nl_art" class="form-control" placeholder="Artículo" style="flex:1">
-                    <input type="text" id="nl_ref" class="form-control" placeholder="Ref." style="width:100px">
-                    <input type="number" id="nl_precio" class="form-control" placeholder="Precio" style="width:100px">
-                    <button type="button" class="btn-primary btn-sm" onclick="saveLinea()">Añadir</button>
-                </div>
-            </div>
-        `;
-    } catch (e) {
-        container.innerHTML = '<p style="color:var(--danger)">Error al cargar líneas.</p>';
-    }
-}
-
-function openLineaForm() {
-    document.getElementById('form-linea-container').style.display = 'block';
-}
-
-async function saveLinea() {
+async function saveLinea(pedidoId) {
     const data = {
-        pedido_id: currentPedidoId,
+        pedido_id: pedidoId,
         cantidad: parseInt(document.getElementById('nl_cant').value) || 1,
         articulo: document.getElementById('nl_art').value,
         referencia_producto: document.getElementById('nl_ref').value,
+        acabado: document.getElementById('nl_acabado').value,
         precio: parseFloat(document.getElementById('nl_precio').value) || 0,
+        observaciones: document.getElementById('nl_obs').value,
     };
     
     try {
@@ -387,17 +437,17 @@ async function saveLinea() {
             body: JSON.stringify(data)
         });
         if(!res.ok) throw new Error('Error al añadir línea');
-        loadLineasPedido(currentPedidoId);
+        editPedido(pedidoId); // Reload the detail view
     } catch (err) {
         alert(err.message);
     }
 }
 
-async function deleteLinea(id) {
+async function deleteLinea(id, pedidoId) {
     if(!confirm('¿Borrar línea?')) return;
     try {
         await fetchAPI(`${API_URL}/items/lineas_pedido/${id}`, { method: 'DELETE' });
-        loadLineasPedido(currentPedidoId);
+        editPedido(pedidoId); // Reload the detail view
     } catch (err) {
         alert('Error');
     }
