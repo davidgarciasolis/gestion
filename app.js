@@ -16,6 +16,7 @@ const loginContainer = document.getElementById('login-container');
 const appContainer = document.getElementById('app-container');
 const loginForm = document.getElementById('login-form');
 const loginError = document.getElementById('login-error');
+const btnLogout = document.getElementById('btn-logout');
 
 // Init
 document.addEventListener('DOMContentLoaded', () => {
@@ -27,6 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loginForm.addEventListener('submit', handleLogin);
+    btnLogout.addEventListener('click', handleLogout);
     
     setupNavigation();
     btnCreate.addEventListener('click', () => openFormModal());
@@ -61,6 +63,11 @@ async function handleLogin(e) {
     } catch (error) {
         loginError.textContent = error.message;
     }
+}
+
+function handleLogout() {
+    localStorage.removeItem('access_token');
+    window.location.reload();
 }
 
 async function fetchAPI(url, options = {}) {
